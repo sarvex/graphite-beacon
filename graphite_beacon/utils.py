@@ -30,8 +30,10 @@ CONVERT = {
         ("%", 1),
     )
 }
-CONVERT_HASH = dict((name, value) for _types in CONVERT.values() for (name, value) in _types)
-CONVERT['ms'] = list((n, v * 1000) for n, v in CONVERT['s'])
+CONVERT_HASH = {
+    name: value for _types in CONVERT.values() for (name, value) in _types
+}
+CONVERT['ms'] = [(n, v * 1000) for n, v in CONVERT['s']]
 CONVERT_HASH['%'] = 1
 TIME_UNIT_SIZE = dict(CONVERT['ms'])
 TIME_UNIT_SYN = {"microsecond": "ms", "second": "s", "minute": "m", "hour": "h", "day": "d",
@@ -66,14 +68,12 @@ def convert_to_format(value, frmt=None):
 
     value /= size
     value = ("%.1f" % value).rstrip('0').rstrip('.')
-    return "%s%s" % (value, name)
+    return f"{value}{name}"
 
 
 def convert_from_format(value):
     _, num, unit = NUMBER_RE.split(str(value))
-    if not unit:
-        return float(value)
-    return float(num) * CONVERT_HASH.get(unit, 1)
+    return float(value) if not unit else float(num) * CONVERT_HASH.get(unit, 1)
 
 
 def parse_interval(interval):
@@ -92,16 +92,16 @@ def interval_to_graphite(interval):
 def parse_rule(rule):
     match = RULE_RE.match(rule)
     if not match:
-        raise ValueError('Invalid rule: %s' % rule)
+        raise ValueError(f'Invalid rule: {rule}')
     level, cond, value, mod = match.groups()
     if value != HISTORICAL:
         value = convert_from_format(value)
 
     if mod:
-        mod = 'lambda x: x ' + mod
+        mod = f'lambda x: x {mod}'
         mod = eval(mod, {}, {})
 
     if cond not in OPERATORS:
-        raise ValueError('Invalid operator: %s for rule %s' % (cond, rule))
+        raise ValueError(f'Invalid operator: {cond} for rule {rule}')
     op = OPERATORS[cond]
     return {'level': level, 'op': op, 'value': value, 'mod': mod or DEFAULT_MOD, 'raw': rule}

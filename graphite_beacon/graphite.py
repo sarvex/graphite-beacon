@@ -7,10 +7,7 @@ class GraphiteRecord(object):
         self.end_time = int(end_time)
         self.step = int(step)
         self.values = list(self._values(data.rsplit(',')))
-        if len(self.values) == 0:
-            self.empty = True
-        else:
-            self.empty = False
+        self.empty = not self.values
 
     @staticmethod
     def _values(values):

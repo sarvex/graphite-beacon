@@ -26,7 +26,7 @@ class CliHandler(AbstractHandler):
 
         substitutes = {
             '${level}': str(level),
-            '${name}': '"' + str(name) + '"',
+            '${name}': f'"{str(name)}"',
             '${value}': str(value),
             '${limit_value}': str(kwargs.get('rule', {}).get('value', '')),
         }

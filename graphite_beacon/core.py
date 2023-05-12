@@ -69,15 +69,17 @@ class Reactor(object):
             alert.stop()
             self.alerts.remove(alert)
 
-        self.alerts = set(
-            BaseAlert.get(self, **opts).start() for opts in self.options.get('alerts', []))
+        self.alerts = {
+            BaseAlert.get(self, **opts).start()
+            for opts in self.options.get('alerts', [])
+        }
 
         LOGGER.debug('Loaded with options:')
         LOGGER.debug(json.dumps(self.options, indent=2))
         return self
 
     def include_config(self, config):
-        LOGGER.info('Load configuration: %s' % config)
+        LOGGER.info(f'Load configuration: {config}')
         if config:
             try:
                 with open(config) as fconfig:
@@ -85,14 +87,14 @@ class Reactor(object):
                     config = json.loads(source)
                     self.options.update(config)
             except (IOError, ValueError):
-                LOGGER.error('Invalid config file: %s' % config)
+                LOGGER.error(f'Invalid config file: {config}')
 
     def reinit_handlers(self, level='warning'):
-        for name in self.options['%s_handlers' % level]:
+        for name in self.options[f'{level}_handlers']:
             try:
                 self.handlers[level].add(registry.get(self, name))
             except Exception as e:
-                LOGGER.error('Handler "%s" did not init. Error: %s' % (name, e))
+                LOGGER.error(f'Handler "{name}" did not init. Error: {e}')
 
     def repeat(self):
         LOGGER.info('Reset alerts')
@@ -152,5 +154,5 @@ def _get_numeric_log_level(level):
         try:
             return _LOG_LEVELS[str(level).upper()]
         except KeyError:
-            raise ValueError("Unknown log level: %s" % level)
+            raise ValueError(f"Unknown log level: {level}")
     return level

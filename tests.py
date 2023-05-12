@@ -63,7 +63,7 @@ def test_alert(reactor):
     assert alert3.interval == '2minute'
 
     assert alert1 == alert3
-    assert set([alert1, alert3]) == set([alert1])
+    assert {alert1, alert3} == {alert1}
 
     alert = BaseAlert.get(reactor, name='Test', query='*', rules=["warning: >= 3MB"])
     assert alert.rules[0]['value'] == 3145728
@@ -75,7 +75,7 @@ def test_multimetrics(reactor):
     alert = BaseAlert.get(
         reactor, name="Test", query="*", rules=[
             "critical: > 100", "warning: > 50", "warning: < historical / 2"])
-    reactor.alerts = set([alert])
+    reactor.alerts = {alert}
 
     with mock.patch.object(reactor, 'notify'):
         alert.check([(110, 'metric1'), (60, 'metric2'), (30, 'metric3')])

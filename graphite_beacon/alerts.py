@@ -37,11 +37,11 @@ class AlertFabric(type):
         cls = super(AlertFabric, mcs).__new__(mcs, name, bases, params)
         if source:
             mcs.alerts[source] = cls
-            LOGGER.info('Register Alert: %s' % source)
+            LOGGER.info(f'Register Alert: {source}')
         return cls
 
-    def get(cls, reactor, source='graphite', **options):
-        acls = cls.alerts[source]
+    def get(self, reactor, source='graphite', **options):
+        acls = self.alerts[source]
         return acls(reactor, **options)
 
 
@@ -59,13 +59,13 @@ class BaseAlert(_.with_metaclass(AlertFabric)):
         try:
             self.configure(**options)
         except Exception as e:
-            raise ValueError("Invalid alert configuration: %s" % e)
+            raise ValueError(f"Invalid alert configuration: {e}")
 
         self.waiting = False
         self.state = {None: "normal", "waiting": "normal", "loading": "normal"}
         self.history = defaultdict(lambda: sliceable_deque([], self.history_size))
 
-        LOGGER.info("Alert '%s': has inited" % self)
+        LOGGER.info(f"Alert '{self}': has inited")
 
     def __hash__(self):
         return hash(self.name) ^ hash(self.source)
@@ -74,17 +74,17 @@ class BaseAlert(_.with_metaclass(AlertFabric)):
         return hash(self) == hash(other)
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.interval)
+        return f"{self.name} ({self.interval})"
 
     def configure(self, name=None, rules=None, query=None, **options):
         assert name, "Alert's name is invalid"
         self.name = name
 
-        assert rules, "%s: Alert's rules is invalid" % name
+        assert rules, f"{name}: Alert's rules is invalid"
         self.rules = [parse_rule(rule) for rule in rules]
         self.rules = list(sorted(self.rules, key=lambda r: LEVELS.get(r.get('level'), 99)))
 
-        assert query, "%s: Alert's query is invalid" % self.name
+        assert query, f"{self.name}: Alert's query is invalid"
         self.query = query
 
         self.interval = interval_to_graphite(
@@ -154,8 +154,7 @@ class BaseAlert(_.with_metaclass(AlertFabric)):
                 return None
             rvalue = sum(history) / len(history)
 
-        rvalue = rule['mod'](rvalue)
-        return rvalue
+        return rule['mod'](rvalue)
 
     def notify(self, level, value, target=None, ntype=None, rule=None):
         """ Notify main reactor about event. """
@@ -193,11 +192,11 @@ class GraphiteAlert(BaseAlert):
         self.url = "%(base)s/render/?target=%(query)s&rawData=true&from=-%(time_window)s" % {
             'base': self.reactor.options['graphite_url'], 'query': query,
             'time_window': self.time_window}
-        LOGGER.debug('%s: url = %s' % (self.name, self.url))
+        LOGGER.debug(f'{self.name}: url = {self.url}')
 
     @gen.coroutine
     def load(self):
-        LOGGER.debug('%s: start checking: %s' % (self.name, self.query))
+        LOGGER.debug(f'{self.name}: start checking: {self.query}')
         if self.waiting:
             self.notify('warning', 'Process takes too much time', target='waiting', ntype='common')
         else:
@@ -208,12 +207,17 @@ class GraphiteAlert(BaseAlert):
                                                    request_timeout=self.request_timeout)
                 records = (GraphiteRecord(line.decode('utf-8')) for line in response.buffer)
                 data = [(None if record.empty else getattr(record, self.method), record.target) for record in records]
-                if len(data) == 0:
+                if not data:
                     raise ValueError('No data')
                 self.check(data)
                 self.notify('normal', 'Metrics are loaded', target='loading', ntype='common')
             except Exception as e:
-                self.notify('critical', 'Loading error: %s' % e, target='loading', ntype='common')
+                self.notify(
+                    'critical',
+                    f'Loading error: {e}',
+                    target='loading',
+                    ntype='common',
+                )
             self.waiting = False
 
     def get_graph_url(self, target, graphite_url=None):
@@ -229,7 +233,7 @@ class URLAlert(BaseAlert):
 
     @gen.coroutine
     def load(self):
-        LOGGER.debug('%s: start checking: %s' % (self.name, self.query))
+        LOGGER.debug(f'{self.name}: start checking: {self.query}')
         if self.waiting:
             self.notify('warning', 'Process takes too much time', target='waiting', ntype='common')
         else:

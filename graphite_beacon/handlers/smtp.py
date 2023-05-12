@@ -51,7 +51,7 @@ class SMTPHandler(AbstractHandler):
             yield smtp_login(smtp, self.options['username'], self.options['password'])
 
         try:
-            LOGGER.debug("Send message to: %s" % ", ".join(self.options['to']))
+            LOGGER.debug(f"""Send message to: {", ".join(self.options['to'])}""")
             smtp.sendmail(self.options['from'], self.options['to'], msg.as_string())
         finally:
             smtp.quit()

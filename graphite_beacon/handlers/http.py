@@ -31,6 +31,6 @@ class HttpHandler(AbstractHandler):
             data['target'] = target
         if rule:
             data['rule'] = rule['raw']
-        data.update(self.params)
+        data |= self.params
         body = urllib.urlencode(data)
         yield self.client.fetch(self.url, method=self.method, body=body)

@@ -24,7 +24,7 @@ class OpsgenieHandler(AbstractHandler):
         description = "{url}/composer/?{params}".format(
                         url=self.reactor.options['graphite_url'],
                         params=urllib.urlencode({'target': alert.query}))
-        alias = target + ':' + alert.name
+        alias = f'{target}:{alert.name}'
 
         if level == 'critical':
             yield self.client.fetch(

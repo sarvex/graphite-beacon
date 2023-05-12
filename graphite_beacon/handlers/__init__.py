@@ -13,21 +13,20 @@ class HandlerMeta(type):
 
     def __new__(mcs, name, bases, params):
         cls = super(HandlerMeta, mcs).__new__(mcs, name, bases, params)
-        name = params.get('name')
-        if name:
+        if name := params.get('name'):
             mcs.handlers[name] = cls
-            LOGGER.info("Register Handler: %s" % name)
+            LOGGER.info(f"Register Handler: {name}")
         return cls
 
     @classmethod
-    def clean(mcs):
-        mcs.loaded = {}
+    def clean(cls):
+        cls.loaded = {}
 
     @classmethod
-    def get(mcs, reactor, name):
-        if name not in mcs.loaded:
-            mcs.loaded[name] = mcs.handlers[name](reactor)
-        return mcs.loaded[name]
+    def get(cls, reactor, name):
+        if name not in cls.loaded:
+            cls.loaded[name] = cls.handlers[name](reactor)
+        return cls.loaded[name]
 
 
 class AbstractHandler(_.with_metaclass(HandlerMeta)):
@@ -38,7 +37,7 @@ class AbstractHandler(_.with_metaclass(HandlerMeta)):
     def __init__(self, reactor):
         self.reactor = reactor
         self.options = dict(self.defaults)
-        self.options.update(self.reactor.options.get(self.name, {}))
+        self.options |= self.reactor.options.get(self.name, {})
         self.init_handler()
         LOGGER.debug('Handler "%s" has inited: %s', self.name, self.options)
 

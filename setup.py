@@ -12,8 +12,8 @@ def _read(fname):
         return ''
 
 _meta = _read('graphite_beacon/__init__.py')
-_license = re.search(r'^__license__\s*=\s*"(.*)"', _meta, re.M).group(1)
-_version = re.search(r'^__version__\s*=\s*"(.*)"', _meta, re.M).group(1)
+_license = re.search(r'^__license__\s*=\s*"(.*)"', _meta, re.M)[1]
+_version = re.search(r'^__version__\s*=\s*"(.*)"', _meta, re.M)[1]
 
 install_requires = [
     l for l in _read('requirements.txt').split('\n') if l and not l.startswith('#')]

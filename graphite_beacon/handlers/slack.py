@@ -27,7 +27,7 @@ class SlackHandler(AbstractHandler):
 
         self.channel = self.options.get('channel')
         if self.channel and not self.channel.startswith('#'):
-            self.channel = '#' + self.channel
+            self.channel = f'#{self.channel}'
         self.username = self.options.get('username')
         self.client = hc.AsyncHTTPClient()
 
@@ -36,10 +36,11 @@ class SlackHandler(AbstractHandler):
         LOGGER.debug("Handler (%s) %s", self.name, level)
 
         message = self.get_short(level, *args, **kwargs)
-        data = dict()
-        data['username'] = self.username
-        data['text'] = message
-        data['icon_emoji'] = self.emoji.get(level, ':warning:')
+        data = {
+            'username': self.username,
+            'text': message,
+            'icon_emoji': self.emoji.get(level, ':warning:'),
+        }
         if self.channel:
             data['channel'] = self.channel
 
